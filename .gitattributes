@@ -1,0 +1,19 @@
+# Normalisation des fins de lignes : LF dans le repo
+* text=auto
+
+# Fichiers texte principaux
+*.py   text
+*.html text
+*.css  text
+*.js   text
+*.md   text
+
+# Images et binaires
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.pdf  binary
+
+# Éviter les problèmes de diff sur les captures d'écran etc.
+screenshots/* binary
