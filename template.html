@@ -1,1 +1,69 @@
-#template.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="template-test.css">
+</head>
+<body>
+    <header>
+        <h1>System Monitoring Report</h1>
+        <p id="timestamp">Loading...</p>
+    </header>
+    <main>
+        <section>
+            <h2>System Section</h2>
+            <ul>
+                <li>Machine name : {{machine_name}}</li>
+                <li>Operating system : {{operating_system}}</li>
+                <li>UpTime : {{uptime}}</li>
+                <li>Number of connected users : {{number_of_users}}</li>
+                <li>System boot time : {{boot_time}}</li>
+                <li>Primary IP address : {{primary_ip_adress}}</li>
+            </ul>
+        </section>
+        <section>
+            <h2>CPU Details</h2>
+            <ul>
+                <li>Number of cores : {{number_of_cores}}</li>
+                <li>Frequency capacity : {{frequency_of_cores}}</li>
+                <li>CPU usage percentage : {{usage_percentage}}</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Memory Usage</h2>
+            <ul>
+                <li>Total RAM (in GB) : {{total_ram}}</li>
+                <li>used RAM (in GB) : {{used_ram}}</li>
+                <li>RAM usage percentage : {{ram_usage_percentage}}</li>
+                <li>usage percentage with visual progress bars : {{progress_bars}}</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Network Information</h2>
+            <ul>
+                <li>Main IP address : {{main_ip_adress}}</li>
+                <li>Additional network interface details : {{interface_details}}</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Process Monitoring</h2>
+            <ul>
+                <li>List of running processes with their CPU usage (%) : {{running_processes_cpu}}</li>
+                <li>Top 3 most resource-consuming processes_3 : {{ressource_consuming_3}}</li>
+                <li>List of running processes with their RAM usage (%) : {{running_processes_ram}}</li>
+            </ul>
+        </section>
+        <section>
+            <h2>File Statistics</h2>
+            <ul>
+                <li>Analyze a selected directory (for example /home/your_user or Documents) : {{analyze_directory}}</li>
+                <li>Count the number of files for these specific extensions -> txt, py, pdf, jpg : {{number_of_files}}</li>
+                <li>Compute the total number of files per extension : {{files_per_extension}}</li>
+                <li>Calculate the percentage represented by each file type compared to the total : {{files_percentage_compared}}</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>
