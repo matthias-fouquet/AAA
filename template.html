@@ -9,35 +9,53 @@
 <body>
     <header>
         <h1>System Monitoring Report</h1>
-        <p id="timestamp">Loading...</p>
+        <p id="timestamp">{{timestamp}}</p>
     </header>
     <main>
         <section>
-            <h2>System Section</h2>
+            <h2>Machine section</h2>
             <ul>
-                <li>Machine name : {{machine_name}}</li>
+                <li>Machine name : {{hostname}}</li>
+                <li>Model : {{model}}</li>
+                <li>Serial_number : {{serial_number}}</li>
+                <li>CPU name : {{cpu_name}}</li>
+                <li>GPU name : {{gpu_name}}</li>
+            </ul>
+        </section>
+        <section>
+            <h2>OS details</h2>
+            <ul>
                 <li>Operating system : {{operating_system}}</li>
+                <li>System version : {{system_version}}</li>
+                <li>Boot time : {{boot_time}}</li>
                 <li>UpTime : {{uptime}}</li>
                 <li>Number of connected users : {{number_of_users}}</li>
-                <li>System boot time : {{boot_time}}</li>
-                <li>Primary IP address : {{primary_ip_adress}}</li>
             </ul>
         </section>
         <section>
             <h2>CPU Details</h2>
             <ul>
                 <li>Number of cores : {{number_of_cores}}</li>
-                <li>Frequency capacity : {{frequency_of_cores}}</li>
-                <li>CPU usage percentage : {{usage_percentage}}</li>
+                <li>Frequency capacity by cores : {{frequency_of_cores}}</li>
+                <li>CPU maximal frequency : {{cpu_maximal_frequency}}</li>
+            </ul>
+        </section>
+        <section>
+            <h2>CPU usage</h2>
+            <ul>
+                <li>CPU usage percentage : {{cpu_usage_percentage}}</li>
+                <li>CPU actual usage : {{cpu_actual_usage}}</li>
+                <li>CPU running processes : {{running_processes_cpu}}</li>
             </ul>
         </section>
         <section>
             <h2>Memory Usage</h2>
             <ul>
                 <li>Total RAM (in GB) : {{total_ram}}</li>
-                <li>used RAM (in GB) : {{used_ram}}</li>
+                <li>Used RAM (in GB) : {{used_ram}}</li>
+                <li>RAM running processes : {{running_processes_ram}}</li>
                 <li>RAM usage percentage : {{ram_usage_percentage}}</li>
-                <li>usage percentage with visual progress bars : {{progress_bars}}</li>
+                <li>{{progress_bars}}</li>
             </ul>
         </section>
         <section>
@@ -48,20 +66,12 @@
             </ul>
         </section>
         <section>
-            <h2>Process Monitoring</h2>
-            <ul>
-                <li>List of running processes with their CPU usage (%) : {{running_processes_cpu}}</li>
-                <li>Top 3 most resource-consuming processes_3 : {{ressource_consuming_3}}</li>
-                <li>List of running processes with their RAM usage (%) : {{running_processes_ram}}</li>
-            </ul>
-        </section>
-        <section>
             <h2>File Statistics</h2>
             <ul>
-                <li>Analyze a selected directory (for example /home/your_user or Documents) : {{analyze_directory}}</li>
-                <li>Count the number of files for these specific extensions -> txt, py, pdf, jpg : {{number_of_files}}</li>
-                <li>Compute the total number of files per extension : {{files_per_extension}}</li>
-                <li>Calculate the percentage represented by each file type compared to the total : {{files_percentage_compared}}</li>
+                <li>Analyze of aC:/Users/NomUtilisateur default directory ( C:/Users/NomUtilisateur or /home/nom_utilisateur /"Documents") : {{analyze_directory}}</li>
+                <li>Total number of files per extension : {{files_per_extension}}</li>
+                <li>Number of files for these specific extensions -> txt, py, pdf, jpg : {{number_of_files}}</li>
+                <li>Percentage represented by each file type (compared to the total) : {{files_percentage_compared}}</li>
             </ul>
         </section>
     </main>
