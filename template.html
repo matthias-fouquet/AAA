@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="template-test.css">
+    <link rel="stylesheet" href="template.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Iceland&display=swap" rel="stylesheet">
 </head>
 <body>
     <header>
@@ -12,67 +15,103 @@
         <p id="timestamp">{{timestamp}}</p>
     </header>
     <main>
-        <section>
-            <h2>Machine section</h2>
-            <ul>
-                <li>Machine name : {{hostname}}</li>
-                <li>Model : {{model}}</li>
-                <li>Serial_number : {{serial_number}}</li>
-                <li>CPU name : {{cpu_name}}</li>
-                <li>GPU name : {{gpu_name}}</li>
-            </ul>
+        <section class="part1">
+            <section class="part1-1">
+                <h2>Machine section</h2>
+                <ul>
+                    <li>Machine name : {{hostname}}</li>
+                    <li>Model : {{model}}</li>
+                    <li>Serial_number : {{serial_number}}</li>
+                    <li>CPU name : {{cpu_name}}</li>
+                    <li>GPU name : {{gpu_name}}</li>
+                </ul>
+            </section>
+            <section class="part1-2">
+                <h2>OS details</h2>
+                <ul>
+                    <li>Operating system : {{operating_system}}</li>
+                    <li>System version : {{system_version}}</li>
+                    <li>Boot time : {{boot_time}}</li>
+                    <li>UpTime : {{uptime}}</li>
+                    <li>Number of connected users : {{number_of_users}}</li>
+                </ul>
+            </section>
+            <section class="part1-3">
+                <h2>CPU Details</h2>
+                <ul>
+                    <li>Number of cores : {{number_of_cores}}</li>
+                    <li>Frequency capacity of cores : {{frequency_of_cores}}</li>
+                    <li>CPU maximal frequency : {{cpu_maximal_frequency}} MHz</li>
+                </ul>
+            </section>
         </section>
-        <section>
-            <h2>OS details</h2>
-            <ul>
-                <li>Operating system : {{operating_system}}</li>
-                <li>System version : {{system_version}}</li>
-                <li>Boot time : {{boot_time}}</li>
-                <li>UpTime : {{uptime}}</li>
-                <li>Number of connected users : {{number_of_users}}</li>
-            </ul>
+        <section class="part2">
+            <section class="part2-1">
+                <h2>CPU usage</h2>
+                <ul>
+                    <li>CPU usage percentage : {{cpu_usage_percentage}} %</li>
+                    <li>CPU actual usage : {{cpu_actual_usage}} MHz</li>
+                    <li>CPU running processes : {{running_processes_cpu}} %</li>
+                </ul>
+            </section>
+            <section class="part2-2">
+                <h2>Memory Usage</h2>
+                <ul>
+                    <li>Total RAM (in GB) : {{ "%.2f"|format(total_ram) }} Go</li>
+                    <li>Used RAM (in GB) : {{ "%.2f"|format(used_ram) }} Go</li>
+                    <li>RAM running processes : {{ "%.2f"|format(running_processes_ram) }} Mo</li>
+                    <li>RAM usage percentage : {{ram_usage_percentage}} %</li>
+                    <li>{{progress_bars}}</li>
+                </ul>
+            </section>
         </section>
-        <section>
-            <h2>CPU Details</h2>
-            <ul>
-                <li>Number of cores : {{number_of_cores}}</li>
-                <li>Frequency capacity by cores : {{frequency_of_cores}}</li>
-                <li>CPU maximal frequency : {{cpu_maximal_frequency}}</li>
-            </ul>
-        </section>
-        <section>
-            <h2>CPU usage</h2>
-            <ul>
-                <li>CPU usage percentage : {{cpu_usage_percentage}}</li>
-                <li>CPU actual usage : {{cpu_actual_usage}}</li>
-                <li>CPU running processes : {{running_processes_cpu}}</li>
-            </ul>
-        </section>
-        <section>
-            <h2>Memory Usage</h2>
-            <ul>
-                <li>Total RAM (in GB) : {{total_ram}}</li>
-                <li>Used RAM (in GB) : {{used_ram}}</li>
-                <li>RAM running processes : {{running_processes_ram}}</li>
-                <li>RAM usage percentage : {{ram_usage_percentage}}</li>
-                <li>{{progress_bars}}</li>
-            </ul>
-        </section>
-        <section>
-            <h2>Network Information</h2>
-            <ul>
-                <li>Main IP address : {{main_ip_adress}}</li>
-                <li>Additional network interface details : {{interface_details}}</li>
-            </ul>
-        </section>
-        <section>
-            <h2>File Statistics</h2>
-            <ul>
-                <li>Analyze of aC:/Users/NomUtilisateur default directory ( C:/Users/NomUtilisateur or /home/nom_utilisateur /"Documents") : {{analyze_directory}}</li>
-                <li>Total number of files per extension : {{files_per_extension}}</li>
-                <li>Number of files for these specific extensions -> txt, py, pdf, jpg : {{number_of_files}}</li>
-                <li>Percentage represented by each file type (compared to the total) : {{files_percentage_compared}}</li>
-            </ul>
+        <section class="part3">
+            <section class="part3-1">
+                <h2>Network Information</h2>
+                <ul>
+                    <li>Main IP address: {{ main_ip_address }}</li>
+                    <li><strong>Interfaces:</strong>
+                        <ul>
+                            {% for name, info in interface_details.items() %}
+                                <li><strong>{{ name }}</strong> — 
+                                    IPv4: {{ info.IPv4 if info.IPv4 else "N/A" }},
+                                    MAC: {{ info.MAC if info.MAC else "N/A" }},
+                                    Status: {{ info.Status }},
+                                    Speed: {{ info.Speed_Mbps if info.Speed_Mbps else "Unknown" }} Mbps
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                </ul>
+            </section>
+            <section class="part3-2">
+                <h2>File Statistics</h2>
+                <ul>
+                    <li><p>Directory analyzed: <strong>{{ analyze_directory }}</strong></p></li>
+                    <li><p>Total number of files found: <strong>{{ number_of_files }}</strong></p></li>
+
+                    <li>
+                        <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 50%;">
+                            <thead>
+                                <tr>
+                                    <th>Extension</th>
+                                    <th>Number of Files</th>
+                                    <th>Percentage (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ext, count in files_per_extension.items() %}
+                                <tr>
+                                    <td>{{ ext }}</td>
+                                    <td style="text-align: right;">{{ count }}</td>
+                                    <td style="text-align: right;">{{ "%.2f"|format(files_percentage_compared[ext]) }} %</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </li>
+                </ul>
+            </section>
         </section>
     </main>
 </body>
