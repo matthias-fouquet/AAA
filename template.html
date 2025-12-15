@@ -1,1 +1,189 @@
-#template.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="refresh" content="30" />
+  <title>System Monitoring Report</title>
+  <link rel="stylesheet" href="template.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Iceland&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+  <header>
+    <h1>System Monitoring Report</h1>
+    <p id="timestamp">Last Boot : {{timestamp}}</p>
+  </header>
+
+  <main>
+    <section class="part1">
+      <section class="part1-1">
+        <h2>MACHINE SECTION</h2>
+        <ul>
+          <li>Machine name : {{hostname}}</li>
+          <li>Model : {{model}}</li>
+          <li>Serial number : {{serial_number}}</li>
+          <li>CPU : {{cpu_name}}</li>
+          <li>GPU : {{gpu_name}}</li>
+        </ul>
+      </section>
+
+      <section class="part1-2">
+        <h2>OS DETAILS</h2>
+        <ul>
+          <li><strong>{{operating_system}}</strong></li>
+          <li>Version : {{system_version}}</li>
+          <li>Boot time : {{boot_time}}</li>
+          <li>UpTime : {{uptime}}</li>
+          <li>
+            Load average (1 min) : {{load_average_1}}
+            <span class="sub-info">(~{{load_average_1_pct}}% of {{cpu_cores_for_load}} cores)</span>
+          </li>
+          <li>
+            Load average (5 min) : {{load_average_5}}
+            <span class="sub-info">(~{{load_average_5_pct}}% of {{cpu_cores_for_load}} cores)</span>
+          </li>
+          <li>
+            Load average (15 min) : {{load_average_15}}
+            <span class="sub-info">(~{{load_average_15_pct}}% of {{cpu_cores_for_load}} cores)</span>
+          </li>
+          <li>
+            Load status :
+            <span class="status-pill status-{{load_level}}">{{load_level}}</span>
+            <span class="sub-info">OK &lt; 70% • HIGH 70–99% • CRITICAL ≥ 100%</span>
+          </li>
+          <li>Number of connected users : {{number_of_users}}</li>
+        </ul>
+      </section>
+
+      <section class="part1-3">
+        <h2>FILE STATISTICS</h2>
+        <ul>
+          <li>
+            <p>Analyzed Directory : <strong>{{analyze_directory}}</strong></p>
+          </li>
+          <li>
+            <p>Total number of files found : <strong>{{number_of_files}}</strong></p>
+          </li>
+          <li>
+            <p>Total size of analyzed directory :
+              <strong>{{total_files_size_gb}} GB</strong>
+            </p>
+          </li>
+          <li>
+            <table class="process-table">
+              <thead>
+                <tr>
+                  <th>Extension</th>
+                  <th>Number of Files</th>
+                  <th>Percentage (%)</th>
+                  <th>Size (GB)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{files_table_rows}}
+              </tbody>
+            </table>
+          </li>
+          <li>
+            <table class="process-table">
+              <caption>TOP 5 LARGEST FILES</caption>
+              <tr>
+                <th>Size (GB)</th>
+                <th>Path</th>
+              </tr>
+              {{largest_files_rows}}
+            </table>
+          </li>
+        </ul>
+      </section>
+    </section>
+
+    <section class="part2">
+      <section class="part2-1">
+        <h2>CPU DETAILS</h2>
+        <ul>
+          <li>Number of cores : {{number_of_cores}}</li>
+          <li>Usage per core : {{usage_per_core}}</li>
+          <li>CPU maximal frequency : {{cpu_maximal_frequency}} MHz</li>
+        </ul>
+      </section>
+
+      <section class="part2-2">
+        <h2>RAM DETAILS</h2>
+        <ul>
+          <li>Memory architecture : {{memory_architecture}}</li>
+          <li>Total RAM (GB) : {{total_ram}}</li>
+          <li>Available RAM (GB) : {{available_ram}}</li>
+          <li>RAM per core : {{ram_per_core}}</li>
+          <li>Total swap (GB) : {{swap_total}}</li>
+        </ul>
+      </section>
+    </section>
+
+    <section class="part3">
+      <section class="part3-1">
+        <ul>
+          <li>
+            <table class="process-table">
+              <caption>CPU USAGE</caption>
+              <tr>
+                <th>PID</th>
+                <th>Process Name</th>
+                <th>% CPU</th>
+              </tr>
+              {{cpu_process_rows}}
+            </table>
+          </li>
+
+          <li>
+            <div class="cpu-progress-container">
+              <div class="cpu-progress-bar level-{{cpu_usage_level}}" style="width: {{cpu_usage_percentage}}%;"></div>
+            </div>
+            <p>{{cpu_usage_percentage}} %</p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="part3-2">
+        <ul>
+          <li>
+            <table class="process-table">
+              <caption>RAM USAGE</caption>
+              <tr>
+                <th>PID</th>
+                <th>Process Name</th>
+                <th>RAM Used / Total RAM</th>
+              </tr>
+              {{ram_process_rows}}
+            </table>
+          </li>
+
+          <li>
+            <div class="ram-progress-container">
+              <div class="ram-progress-bar level-{{ram_usage_level}}" style="width: {{ram_usage_percentage}}%;"></div>
+            </div>
+            <p>{{ram_usage_percentage}} %</p>
+          </li>
+        </ul>
+      </section>
+    </section>
+
+    <section class="part4">
+      <section class="part4-1">
+        <h2>NETWORK INFORMATION</h2>
+        <ul>
+          <li>Main IP address : {{main_ip_address}}</li>
+          <li><strong>Interfaces:</strong>
+            <ul>
+              {{interfaces_rows}}
+            </ul>
+          </li>
+        </ul>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
