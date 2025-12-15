@@ -1,39 +1,25 @@
-# collecte données CPU, RAM, ect.
-import psutil 
-
-# collecte version systeme, machine, ect.
+import os
 import platform
-
-# collecte adresse ip principale 
+import re
 import socket
-
-# permet l'analyse de reppertoires et d'extensions
-import os 
-
-# collecte de l'heure de demarrage, temps depuis logging, ect.
-import time
-from time import gmtime, strftime
-from datetime import datetime
-
-# commandes avancées, infos systeme
 import subprocess
-
-# permet anayse de fichiers (reccurcivité propre)
+import time
+from datetime import datetime
 from pathlib import Path
-
-# permet la manipulation d'html manuellement
 from string import Template
 
-# sert au pourcentage et calculs de statistiques pour les gauges
-import math
+import psutil
 
-timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+# timestamp = heure de boot formatée
+timestamp = datetime.fromtimestamp(psutil.boot_time()).strftime("%A %d %B %Y, %H:%M:%S")
+
 
 def get_serial_number():
     system = platform.system()
     try:
         if system == "Windows":
-            serial = subprocess.getoutput('wmic bios get serialnumber').split("\n")[-1].strip()
+            serial = subprocess.getoutput("wmic bios get serialnumber").split("\n")[-1].strip()
         elif system == "Linux":
             serial = subprocess.getoutput("cat /sys/class/dmi/id/product_serial").strip()
             if not serial:
@@ -45,165 +31,271 @@ def get_serial_number():
         else:
             serial = "Unsupported OS"
         return serial if serial else "Unknown"
-    except:
+    except Exception:
         return "Unknown"
-    
+
+
 def get_gpu_name():
     system = platform.system()
     try:
         if system == "Windows":
-            gpu = subprocess.getoutput("wmic path win32_VideoController get name").split("\n")[1].strip()
+            lines = subprocess.getoutput("wmic path win32_VideoController get name").splitlines()
+            gpu = next((l.strip() for l in lines if l.strip() and "Name" not in l), "")
         elif system == "Linux":
             gpu = subprocess.getoutput("lspci | grep -i 'vga'").strip()
         elif system == "Darwin":
             gpu = subprocess.getoutput("system_profiler SPDisplaysDataType | grep 'Chipset Model'").strip()
         else:
-            return "Unsupported system"
+            gpu = "Unsupported system"
         return gpu if gpu else "Unknown GPU"
-    except:
+    except Exception:
         return "Unknown GPU"
 
+
+def get_cpu_name():
+    # platform.uname().processor est souvent vide sur Linux
+    cpu = (platform.uname().processor or "").strip()
+    if cpu:
+        return cpu
+
+    system = platform.system()
+    try:
+        if system == "Linux":
+            out = subprocess.getoutput("cat /proc/cpuinfo | grep -m1 'model name' | cut -d: -f2").strip()
+            return out if out else "Unknown CPU"
+        elif system == "Darwin":
+            out = subprocess.getoutput("sysctl -n machdep.cpu.brand_string").strip()
+            return out if out else "Unknown CPU"
+        elif system == "Windows":
+            out = subprocess.getoutput("wmic cpu get name").splitlines()
+            name = next((l.strip() for l in out if l.strip() and "Name" not in l), "")
+            return name if name else "Unknown CPU"
+    except Exception:
+        pass
+
+    return "Unknown CPU"
+
+
 def machine_section():
-    hostname = platform.node()
-    model = platform.uname().machine
-    serial_number = get_serial_number()
-    cpu_name = platform.uname().processor
-    gpu_name = get_gpu_name()
-    return hostname, model, serial_number, cpu_name, gpu_name
+    return {
+        "hostname": platform.node(),
+        "model": platform.uname().machine,
+        "serial_number": get_serial_number(),
+        "cpu_name": get_cpu_name(),
+        "gpu_name": get_gpu_name(),
+    }
+
 
 def os_details():
-    operating_system = platform.uname().system
-    system_version = platform.uname().version
-    boot_time = datetime.fromtimestamp(psutil.boot_time())
+    boot_time_dt = datetime.fromtimestamp(psutil.boot_time())
     uptime_seconds = time.time() - psutil.boot_time()
-    uptime = time.strftime("%H:%M:%S", time.gmtime(uptime_seconds))
-    number_of_users = len(psutil.users())
-    return operating_system, system_version, boot_time, uptime, number_of_users
+
+    return {
+        "operating_system": platform.uname().system,
+        "system_version": platform.release(),  # plus lisible que uname().version
+        "boot_time": boot_time_dt.strftime("%Y-%m-%d %H:%M:%S"),
+        "uptime": time.strftime("%H:%M:%S", time.gmtime(uptime_seconds)),
+        "number_of_users": len(psutil.users()),
+    }
+
 
 def cpu_details():
-    number_of_cores = psutil.cpu_count()
+    cpu_freq = psutil.cpu_freq()
     usage_per_core = psutil.cpu_percent(interval=1, percpu=True)
-    frequency_of_cores = "".join(f"core {i}: {percent:.1f}%" for i, percent in enumerate(usage_per_core))
-    cpu_maximal_frequency = psutil.cpu_freq().max
-    return number_of_cores, frequency_of_cores, cpu_maximal_frequency
+
+    usage_per_core_str = ", ".join(f"core {i}: {percent:.1f}%" for i, percent in enumerate(usage_per_core))
+
+    return {
+        "number_of_cores": psutil.cpu_count() or 0,
+        "usage_per_core": usage_per_core_str,
+        "cpu_maximal_frequency": round(cpu_freq.max, 0) if cpu_freq else 0,
+    }
+
 
 def cpu_usage():
-    cpu_usage_percentage = psutil.cpu_percent(interval=1)
-    cpu_actual_usage = psutil.cpu_freq().current
-    running_processes_cpu = psutil.Process().cpu_percent(interval=1)
-    return cpu_usage_percentage, cpu_actual_usage, running_processes_cpu
+    return {
+        "cpu_usage_percentage": round(psutil.cpu_percent(interval=0.6), 1),
+    }
+
+
+def memory_details():
+    vm = psutil.virtual_memory()
+    swap = psutil.swap_memory()
+
+    def gb(x):
+        return round(x / (1024**3), 2)
+
+    total_ram = gb(vm.total)
+    available_ram = gb(vm.available)
+
+    cpu_cores = psutil.cpu_count() or 1
+
+    return {
+        "total_ram": total_ram,
+        "available_ram": available_ram,
+        "memory_architecture": platform.architecture()[0],
+        "ram_per_core": f"{round(total_ram / cpu_cores, 2)} GB / core",
+        "swap_total": gb(swap.total),
+    }
+
 
 def memory_usage():
-    total_ram = psutil.virtual_memory().total/(1024 ** 3)
-    used_ram = psutil.virtual_memory().used/(1024 ** 3)
-    running_processes_ram = psutil.Process().memory_info().rss / (1024 ** 2)
-    
-    # FIX ✔️ plus de division par 1Go !
-    ram_usage_percentage = psutil.virtual_memory().percent
-    
-    return total_ram, used_ram, running_processes_ram, ram_usage_percentage
+    vm = psutil.virtual_memory()
+
+    def gb(x):
+        return round(x / (1024**3), 2)
+
+    total_ram = gb(vm.total)
+    used_ram = gb(vm.used)
+
+    ram_usage_percentage = round((used_ram / total_ram) * 100, 1) if total_ram > 0 else 0
+
+    return {
+        "ram_usage_percentage": ram_usage_percentage,
+    }
+
 
 def network_information():
-    hostname = socket.gethostname()
-    main_ip_address = socket.gethostbyname(hostname)
-    interfaces = psutil.net_if_addrs()
-    stats = psutil.net_if_stats()
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        main_ip_address = s.getsockname()[0]
+        s.close()
+    except Exception:
+        main_ip_address = "Unknown"
 
-    simple_interfaces = {}
+    interfaces = psutil.net_if_addrs()
+    rows = []
 
     for name, addrs in interfaces.items():
-        iface_info = {"IPv4": None, "MAC": None, "Status": "Down", "Speed_Mbps": 0}
-        for addr in addrs:
-            if addr.family == socket.AF_INET:
-                iface_info["IPv4"] = addr.address
-            elif addr.family == psutil.AF_LINK:
-                iface_info["MAC"] = addr.address
-        if name in stats:
-            iface_info["Status"] = "Up" if stats[name].isup else "Down"
-            iface_info["Speed_Mbps"] = stats[name].speed
-        simple_interfaces[name] = iface_info
+        ipv4 = [a.address for a in addrs if getattr(a, "family", None) == socket.AF_INET]
+        if ipv4:
+            rows.append(f"<li>{name}: {', '.join(ipv4)}</li>")
 
-    return main_ip_address, simple_interfaces
+    return {
+        "main_ip_address": main_ip_address,
+        "interfaces_rows": "\n".join(rows) if rows else "<li>No IPv4 interfaces found</li>",
+    }
+
 
 def file_statistics():
     analyze_directory = str(Path.home() / "Documents")
     extensions = [".txt", ".py", ".pdf", ".jpg"]
-    files_per_extension = {ext: 0 for ext in extensions}
-    number_of_files = 0
 
-    for root, dirs, files in os.walk(analyze_directory):
-        for file in files:
-            number_of_files += 1
-            ext = Path(file).suffix.lower()
-            if ext in files_per_extension:
-                files_per_extension[ext] += 1
+    counts = {ext: 0 for ext in extensions}
+    total_files = 0
 
-    files_percentage_compared = {
-        ext: (count / number_of_files) * 100 if number_of_files else 0
-        for ext, count in files_per_extension.items()
-    }
-    return analyze_directory, files_per_extension, number_of_files, files_percentage_compared
+    for _, _, files in os.walk(analyze_directory):
+        for f in files:
+            total_files += 1
+            ext = Path(f).suffix.lower()
+            if ext in counts:
+                counts[ext] += 1
 
-from jinja2 import Template
+    def pct(count: int) -> float:
+        return (count / total_files * 100) if total_files else 0.0
 
-def main():
+    rows = []
+    for ext in extensions:
+        rows.append(
+            "<tr>"
+            f"<td>{ext}</td>"
+            f"<td>{counts[ext]}</td>"
+            f"<td>{pct(counts[ext]):.2f}</td>"
+            "</tr>"
+        )
 
-    html_raw = Path("template.html").read_text(encoding="utf-8")
-
-    hostname, model, serial_number, cpu_name, gpu_name = machine_section()
-    operating_system, system_version, boot_time, uptime, number_of_users = os_details()
-    number_of_cores, frequency_of_cores, cpu_maximal_frequency = cpu_details()
-    cpu_usage_percentage, cpu_actual_usage, running_processes_cpu = cpu_usage()
-    total_ram, used_ram, running_processes_ram, ram_usage_percentage = memory_usage()
-    main_ip_address, interface_details = network_information()
-    analyze_directory, files_per_extension, number_of_files, files_percentage_compared = file_statistics()
-
-    data = {
-        "timestamp": timestamp,
-        "hostname": hostname,
-        "model": model,
-        "serial_number": serial_number,
-        "cpu_name": cpu_name,
-        "gpu_name": gpu_name,
-
-        "operating_system": operating_system,
-        "system_version": system_version,
-        "boot_time": boot_time,
-        "uptime": uptime,
-        "number_of_users": number_of_users,
-
-        "number_of_cores": number_of_cores,
-        "frequency_of_cores": frequency_of_cores,
-        "cpu_maximal_frequency": cpu_maximal_frequency,
-
-        "cpu_usage_percentage": cpu_usage_percentage,
-        "cpu_actual_usage": cpu_actual_usage,
-        "running_processes_cpu": running_processes_cpu,
-
-        "total_ram": total_ram,
-        "used_ram": used_ram,
-        "running_processes_ram": running_processes_ram,
-        "ram_usage_percentage": ram_usage_percentage,
-
-        "main_ip_address": main_ip_address,
-        "interface_details": interface_details,
-
+    return {
         "analyze_directory": analyze_directory,
-        "files_per_extension": files_per_extension,
-        "number_of_files": number_of_files,
-        "files_percentage_compared": files_percentage_compared,
-
-        "progress_bars": ""
+        "number_of_files": total_files,
+        "files_table_rows": "\n".join(rows),
     }
 
-    # --- rendu JINJA2 ---
-    template = Template(html_raw)
-    html = template.render(data)
 
-    Path("index.html").write_text(html, encoding="utf-8")
-    print("✔️ Rapport généré : index.html")
+def top_processes(limit=5):
+    procs = []
+    for p in psutil.process_iter(["pid", "name"]):
+        try:
+            procs.append(p)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+
+    # Amorcer CPU par process
+    for p in procs:
+        try:
+            p.cpu_percent(None)
+        except Exception:
+            pass
+
+    time.sleep(0.6)
+
+    cpu_list = []
+    ram_list = []
+
+    vm = psutil.virtual_memory()
+    total_gb = vm.total / (1024**3)
+
+    for p in procs:
+        try:
+            cpu = p.cpu_percent(None)
+            mem_gb = p.memory_info().rss / (1024**3)
+            name = p.info.get("name") or "?"
+            cpu_list.append((cpu, p.pid, name))
+            ram_list.append((mem_gb, p.pid, name))
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+
+    cpu_list.sort(reverse=True, key=lambda x: x[0])
+    ram_list.sort(reverse=True, key=lambda x: x[0])
+
+    cpu_rows = []
+    for cpu, pid, name in cpu_list[:limit]:
+        cpu_rows.append(f"<tr><td>{pid}</td><td>{name}</td><td>{cpu:.1f}</td></tr>")
+
+    ram_rows = []
+    for mem_gb, pid, name in ram_list[:limit]:
+        ram_rows.append(
+            f"<tr><td>{pid}</td><td>{name}</td><td>{mem_gb:.2f} GB / {total_gb:.2f} GB</td></tr>"
+        )
+
+    return {
+        "cpu_process_rows": "\n".join(cpu_rows) if cpu_rows else "<tr><td colspan='3'>No data</td></tr>",
+        "ram_process_rows": "\n".join(ram_rows) if ram_rows else "<tr><td colspan='3'>No data</td></tr>",
+    }
 
 
-# --- IMPORTANT : on lance main() ---
+def build_context():
+    context = {"timestamp": timestamp}
+    context.update(machine_section())
+    context.update(os_details())
+    context.update(cpu_details())
+    context.update(cpu_usage())
+    context.update(memory_details())
+    context.update(memory_usage())
+    context.update(network_information())
+    context.update(file_statistics())
+    context.update(top_processes(limit=5))
+    return context
+
+
+def convert_double_braces_to_template_syntax(html: str) -> str:
+    pattern = re.compile(r"\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}")
+    return pattern.sub(r"${\1}", html)
+
+
+def html_generator():
+    base_dir = Path(__file__).resolve().parent
+    template_path = base_dir / "template.html"
+    output_path = base_dir / "index.html"
+
+    raw_template = template_path.read_text(encoding="utf-8")
+    converted_template = convert_double_braces_to_template_syntax(raw_template)
+
+    template = Template(converted_template)
+    html_output = template.safe_substitute(build_context())
+
+    output_path.write_text(html_output, encoding="utf-8")
+
+
 if __name__ == "__main__":
-    main()
+    html_generator()
